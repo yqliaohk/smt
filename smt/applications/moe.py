@@ -320,6 +320,33 @@ class MOE(SurrogateBasedApplication):
             y = self._predict_hard_output(x, output_variances=True)
         return y
 
+    def predict_derivatives(self, x, kx):
+        """
+        Predict the output derivatives at a set of points.
+
+        Parameters
+        ----------
+        x : np.ndarray[nt, nx] or np.ndarray[nt]
+            Input values for the prediction points.
+
+        Returns
+        -------
+        y : np.ndarray[nt, ny]
+            Output derivatives at the prediction points.
+        """
+
+        # if not self.options["derivatives_support"]:
+        #     raise RuntimeError(
+        #         "Experts not selected taking derivatives support into account: use derivatives_support=True "
+        #         "when creating MOE"
+        #     )
+
+        if self.smooth_recombination:
+            y = self._predict_smooth_output(x, output_derivatives=True, kx=kx)
+        else:
+            y = self._predict_hard_output(x, output_derivatives=True, kx=kx)
+        return y
+
     def _check_inputs(self):
         """
         Check the input data given by the client is correct.
@@ -433,7 +460,7 @@ class MOE(SurrogateBasedApplication):
                 self._experts[i].set_training_values(xtrain, ytrain)
                 self._experts[i].train()
 
-    def _predict_hard_output(self, x, output_variances=False):
+    def _predict_hard_output(self, x, output_variances=False, output_derivatives=False, kx=None):
         """
         This method predicts the output of a x samples for a
         discontinuous recombination.
@@ -458,6 +485,8 @@ class MOE(SurrogateBasedApplication):
 
             if output_variances:
                 predicted_values.append(model.predict_variances(np.atleast_2d(x[i]))[0])
+            elif output_derivatives:
+                predicted_values.append(model.predict_derivatives(np.atleast_2d(x[i]), kx=kx)[0])
             else:
                 predicted_values.append(model.predict_values(np.atleast_2d(x[i]))[0])
 
@@ -465,7 +494,7 @@ class MOE(SurrogateBasedApplication):
 
         return predicted_values
 
-    def _predict_smooth_output(self, x, distribs=None, output_variances=False):
+    def _predict_smooth_output(self, x, distribs=None, output_variances=False, output_derivatives=False, kx=None):
         """
         This method predicts the output of x with a smooth recombination.
 
@@ -494,6 +523,11 @@ class MOE(SurrogateBasedApplication):
                 if output_variances:
                     expert_value = (
                         self._experts[j].predict_variances(np.atleast_2d(x[i]))[0]
+                        * sort_proba[i][j] ** 2
+                    )
+                elif output_derivatives:
+                    expert_value = (
+                        self._experts[j].predict_derivatives(np.atleast_2d(x[i]),kx=kx)[0]
                         * sort_proba[i][j] ** 2
                     )
                 else:
