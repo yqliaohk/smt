@@ -9,6 +9,7 @@ SMT is developed by:
 * Joaquim Martins 
 
 SMT has been developed thanks to contributions from:
+* Alexandre Thouvenot
 * Andres Lopez Lopera
 * Emile Roux
 * Florent Vergnes
@@ -27,3 +28,4 @@ SMT has been developed thanks to contributions from:
 * Ruben Conde
 * Steven Berguin
 * Vincent Drouet
+* Zhou Tianxun

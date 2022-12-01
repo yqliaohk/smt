@@ -12,18 +12,20 @@ from types import FunctionType
 from scipy.stats import norm
 from scipy.optimize import minimize
 
-from smt.utils.options_dictionary import OptionsDictionary
-from smt.applications.application import SurrogateBasedApplication
-from smt.applications.mixed_integer import (
-    MixedIntegerContext,
-    GOWER,
-    HOMO_GAUSSIAN,
-    FULL_GAUSSIAN,
-)
-from smt.utils.misc import compute_rms_error
-
-from smt.surrogate_models import KPLS, KRG, KPLSK, MGP, GEKPLS
 from smt.sampling_methods import LHS
+from smt.surrogate_models import (
+    KPLS,
+    KRG,
+    KPLSK,
+    MGP,
+    GEKPLS,
+    GOWER_KERNEL,
+    EXP_HOMO_HSPHERE_KERNEL,
+    HOMO_HSPHERE_KERNEL,
+    CONT_RELAX_KERNEL,
+)
+from smt.applications.application import SurrogateBasedApplication
+from smt.applications.mixed_integer import MixedIntegerContext
 
 
 class Evaluator(object):
@@ -112,8 +114,12 @@ class EGO(SurrogateBasedApplication):
         declare(
             "categorical_kernel",
             None,
-            types=str,
-            values=[GOWER, HOMO_GAUSSIAN, FULL_GAUSSIAN],
+            values=[
+                GOWER_KERNEL,
+                EXP_HOMO_HSPHERE_KERNEL,
+                HOMO_HSPHERE_KERNEL,
+                CONT_RELAX_KERNEL,
+            ],
             desc="The kernel to use for categorical inputs. Only for non continuous Kriging.",
         )
         declare(

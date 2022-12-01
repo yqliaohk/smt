@@ -11,8 +11,6 @@ Adapted on January 2021 by Andres Lopez-Lopera to the new SMT version
 
 import numpy as np
 
-from packaging import version
-
 from sklearn.cross_decomposition import PLSRegression as pls
 from sklearn.metrics.pairwise import manhattan_distances
 
@@ -64,4 +62,4 @@ class MFKPLS(MFK):
         return X, y
 
     def _get_theta(self, i):
-        return np.sum(self.optimal_theta[i] * self.coeff_pls ** 2, axis=1)
+        return np.sum(self.optimal_theta[i] * self.coeff_pls**2, axis=1)

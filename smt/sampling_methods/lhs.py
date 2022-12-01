@@ -288,14 +288,14 @@ class LHS(ScaledSamplingMethod):
         dist1 = cdist([X[i1, :]], X_)
         dist2 = cdist([X[i2, :]], X_)
         d1 = np.sqrt(
-            dist1 ** 2 + (X[i2, k] - X_[:, k]) ** 2 - (X[i1, k] - X_[:, k]) ** 2
+            dist1**2 + (X[i2, k] - X_[:, k]) ** 2 - (X[i1, k] - X_[:, k]) ** 2
         )
         d2 = np.sqrt(
-            dist2 ** 2 - (X[i2, k] - X_[:, k]) ** 2 + (X[i1, k] - X_[:, k]) ** 2
+            dist2**2 - (X[i2, k] - X_[:, k]) ** 2 + (X[i1, k] - X_[:, k]) ** 2
         )
 
         res = (
-            PhiP_ ** p + (d1 ** (-p) - dist1 ** (-p) + d2 ** (-p) - dist2 ** (-p)).sum()
+            PhiP_**p + (d1 ** (-p) - dist1 ** (-p) + d2 ** (-p) - dist2 ** (-p)).sum()
         ) ** (1.0 / p)
         X[i1, k], X[i2, k] = X[i2, k], X[i1, k]
 
@@ -321,12 +321,7 @@ class LHS(ScaledSamplingMethod):
         outer_loop = min(int(1.5 * dim), 30)
         inner_loop = min(20 * dim, 100)
 
-        D0 = pdist(P0)
-        R0 = np.corrcoef(P0)
-        corr0 = np.max(np.abs(R0[R0 != 1]))
-        phip0 = self._PhiP(P0)
-
-        P, historic = self._maximinESE(
+        P, _ = self._maximinESE(
             P0,
             outer_loop=outer_loop,
             inner_loop=inner_loop,

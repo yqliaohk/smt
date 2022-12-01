@@ -52,7 +52,9 @@ Usage
       )
       return res
   
-  sampling = LHS(xlimits=np.asarray([(-1, 1)] * dim), criterion="m")
+  sampling = LHS(
+      xlimits=np.asarray([(-1, 1)] * dim), criterion="m", random_state=42
+  )
   xt = sampling(8)
   yt = np.atleast_2d(fun(xt)).T
   
@@ -77,7 +79,8 @@ Usage
   x_plot = sm.get_x_from_u(u_plot)  # Get corresponding points in Omega
   y_plot_true = fun(x_plot)
   y_plot_pred = sm.predict_values(u_plot)
-  sigma_MGP, sigma_KRG = sm.predict_variances(u_plot, True)
+  sigma_MGP = sm.predict_variances(u_plot)
+  sigma_KRG = sm.predict_variances_no_uq(u_plot)
   
   u_train = sm.get_u_from_x(xt)  # Get corresponding points in A
   
@@ -88,16 +91,16 @@ Usage
   ax.plot(u_train, yt, "k+", mew=3, ms=10, label="Train")
   ax.fill_between(
       u_plot[:, 0],
-      y_plot_pred - 3 * sigma_MGP,
-      y_plot_pred + 3 * sigma_MGP,
+      y_plot_pred[:, 0] - 3 * sigma_MGP[:, 0],
+      y_plot_pred[:, 0] + 3 * sigma_MGP[:, 0],
       color="r",
       alpha=0.5,
       label="Variance with hyperparameters uncertainty",
   )
   ax.fill_between(
       u_plot[:, 0],
-      y_plot_pred - 3 * sigma_KRG,
-      y_plot_pred + 3 * sigma_KRG,
+      y_plot_pred[:, 0] - 3 * sigma_KRG[:, 0],
+      y_plot_pred[:, 0] + 3 * sigma_KRG[:, 0],
       color="b",
       alpha=0.5,
       label="Variance without hyperparameters uncertainty",
@@ -125,7 +128,7 @@ Usage
    Training
      
      Training ...
-     Training - done. Time (sec):  0.6101887
+     Training - done. Time (sec):  1.0243082
   
 .. figure:: mgp_Test_test_mgp.png
   :scale: 80 %
@@ -177,12 +180,12 @@ Options
   *  -  corr
      -  squar_exp
      -  ['abs_exp', 'squar_exp', 'act_exp', 'matern52', 'matern32']
-     -  ['str']
+     -  None
      -  Correlation function type
   *  -  categorical_kernel
      -  None
-     -  ['gower', 'homoscedastic_gaussian_matrix_kernel', 'full_gaussian_matrix_kernel']
-     -  ['str']
+     -  ['continuous_relaxation_matrix_kernel', 'gower_matrix_kernel', 'exponential_homoscedastic_matrix_kernel', 'homoscedastic_matrix_kernel']
+     -  None
      -  The kernel to use for categorical inputs. Only for non continuous Kriging
   *  -  xtypes
      -  None
