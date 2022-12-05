@@ -1082,9 +1082,13 @@ class KrgBased(SurrogateModel):
         # Get pairwise componentwise L1-distances to the input training set
         dx = differences(x, Y=self.X_norma.copy())
         d = self._componentwise_distance(dx)
+        d_dx = self._componentwise_distance(dx, theta=self.optimal_theta, return_derivative=True)
         # Compute the correlation function
         r = self._correlation_types[self.options["corr"]](
             self.optimal_theta, d
+        ).reshape(n_eval, self.nt)
+        dr_dx = self._correlation_types[self.options["corr"]](
+            self.optimal_theta, d_dx, grad_ind=kx
         ).reshape(n_eval, self.nt)
 
         if self.options["corr"] != "squar_exp":
@@ -1106,13 +1110,31 @@ class KrgBased(SurrogateModel):
         beta = self.optimal_par["beta"]
         gamma = self.optimal_par["gamma"]
         df_dx = np.dot(df.T, beta)
-        d_dx = x[:, kx].reshape((n_eval, 1)) - self.X_norma[:, kx].reshape((1, self.nt))
+        d_dxi = x[:, kx].reshape((n_eval, 1)) - self.X_norma[:, kx].reshape((1, self.nt))
+        d_dxi_new = d_dx[:,kx]
+        print("dx: ", dx)
+        print("shape of dx: ", dx.shape)
+        print("d_dx: ", d_dx)
+        print("shape of d_dx: ", d_dx.shape)
+        print("dr_dx: ", dr_dx)
+        print("shape of dr_dx: ", dr_dx.shape)
+        print("shape of gamma: ", gamma.shape)
+        print("shape of d_dxi * r: ", (d_dxi * r).shape)
+        print("r: ", r)
+        print("shape of r: ", r.shape)
         if self.name != "Kriging" and "KPLSK" not in self.name:
             theta = np.sum(self.optimal_theta * self.coeff_pls**2, axis=1)
         else:
             theta = self.optimal_theta
+        # y = (
+        #     (df_dx[kx] - 2 * theta[kx] * np.dot(d_dx * r, gamma))
+        #     * self.y_std
+        #     / self.X_scale[kx]
+        # )
+        print("original value: ", 2 * theta[kx] * np.dot(d_dxi * r, gamma))
+        print("new value; ", np.dot(d_dxi_new*r, gamma))
         y = (
-            (df_dx[kx] - 2 * theta[kx] * np.dot(d_dx * r, gamma))
+            (df_dx[kx] - np.dot(d_dxi_new*r, gamma))
             * self.y_std
             / self.X_scale[kx]
         )
@@ -1564,7 +1586,7 @@ class KrgBased(SurrogateModel):
                     return best_optimal_rlf_value, best_optimal_par, best_optimal_theta
 
                 if self.options["corr"] == "squar_exp":
-                    self.options["theta0"] = (theta * self.coeff_pls**2).sum(1)
+                    self.options["theta0"] = (theta * np.abs(self.coeff_pls)**1.9).sum(1)
                 else:
                     self.options["theta0"] = (theta * np.abs(self.coeff_pls)).sum(1)
 

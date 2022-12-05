@@ -1113,14 +1113,18 @@ def componentwise_distance(D, corr, dim, theta=None, return_derivative=False):
     D_corr = np.zeros((D.shape[0], dim))
     i, nb_limit = 0, int(limit)
     if return_derivative == False:
+        print("Not compute for derivatives")
         while True:
             if i * nb_limit > D_corr.shape[0]:
                 return D_corr
             else:
                 if corr == "squar_exp":
-                    D_corr[i * nb_limit : (i + 1) * nb_limit, :] = (
-                        D[i * nb_limit : (i + 1) * nb_limit, :] ** 2
-                    )
+                    # D_corr[i * nb_limit : (i + 1) * nb_limit, :] = (
+                    #     D[i * nb_limit : (i + 1) * nb_limit, :] ** 2
+                    # )
+                    D_corr[i * nb_limit : (i + 1) * nb_limit, :] = np.abs(
+                        D[i * nb_limit : (i + 1) * nb_limit, :]
+                    )**1.9
                 elif corr == "act_exp":
                     D_corr[i * nb_limit : (i + 1) * nb_limit, :] = D[
                         i * nb_limit : (i + 1) * nb_limit, :
@@ -1137,7 +1141,16 @@ def componentwise_distance(D, corr, dim, theta=None, return_derivative=False):
                 "Missing theta to compute spatial derivative of theta cross-spatial correlation distance"
             )
         if corr == "squar_exp":
-            D_corr = 2 * np.einsum("j,ij->ij", theta.T, D)
+            # D_corr = 2 * np.einsum("j,ij->ij", theta.T, D)
+
+            der = np.ones(D.shape)
+            print("compute for derivatives")
+            for i, j in np.ndindex(D.shape):
+                der[i][j] = np.abs(D[i][j])**0.9
+                if D[i][j] < 0:
+                    der[i][j] = der[i][j] * (-1)
+
+            D_corr = 1.9*np.einsum("j,ij->ij", theta.T, der)
             return D_corr
         elif corr == "act_exp":
             raise ValueError("this option is not implemented for active learning")
@@ -1203,8 +1216,11 @@ def componentwise_distance_PLS(
                 return D_corr
             else:
                 if corr == "squar_exp":
+                    # D_corr[i * nb_limit : (i + 1) * nb_limit, :] = np.dot(
+                        # D[i * nb_limit : (i + 1) * nb_limit, :] ** 2, coeff_pls**2
+                    # )
                     D_corr[i * nb_limit : (i + 1) * nb_limit, :] = np.dot(
-                        D[i * nb_limit : (i + 1) * nb_limit, :] ** 2, coeff_pls**2
+                        np.abs(D[i * nb_limit : (i + 1) * nb_limit, :]) ** 1.9, np.abs(coeff_pls)**1.9
                     )
                 else:
                     # abs_exp
@@ -1221,13 +1237,18 @@ def componentwise_distance_PLS(
             )
 
         if corr == "squar_exp":
+            print("PLS")
             D_corr = np.zeros(np.shape(D))
+            der = np.ones(np.shape(D))
             for i, j in np.ndindex(D.shape):
+                if D[i][j] < 0:
+                    der[i][j] = -1
                 coef = 0
                 for l in range(n_comp):
-                    coef = coef + theta[l] * coeff_pls[j][l] ** 2
-                coef = 2 * coef
-                D_corr[i][j] = coef * D[i][j]
+                    # coef = coef + theta[l] * coeff_pls[j][l] ** 2
+                    coef = coef + theta[l] * np.abs(coeff_pls[j][l]) ** 0.9
+                coef = 1.9 * coef
+                D_corr[i][j] = coef * D[i][j] * der[i][j]
             return D_corr
 
         else:
