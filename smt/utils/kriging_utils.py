@@ -1113,7 +1113,6 @@ def componentwise_distance(D, corr, dim, theta=None, return_derivative=False):
     D_corr = np.zeros((D.shape[0], dim))
     i, nb_limit = 0, int(limit)
     if return_derivative == False:
-        print("Not compute for derivatives")
         while True:
             if i * nb_limit > D_corr.shape[0]:
                 return D_corr
@@ -1144,7 +1143,6 @@ def componentwise_distance(D, corr, dim, theta=None, return_derivative=False):
             # D_corr = 2 * np.einsum("j,ij->ij", theta.T, D)
 
             der = np.ones(D.shape)
-            print("compute for derivatives")
             for i, j in np.ndindex(D.shape):
                 der[i][j] = np.abs(D[i][j])**0.9
                 if D[i][j] < 0:
@@ -1237,7 +1235,6 @@ def componentwise_distance_PLS(
             )
 
         if corr == "squar_exp":
-            print("PLS")
             D_corr = np.zeros(np.shape(D))
             der = np.ones(np.shape(D))
             for i, j in np.ndindex(D.shape):

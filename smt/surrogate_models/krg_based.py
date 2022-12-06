@@ -1111,17 +1111,19 @@ class KrgBased(SurrogateModel):
         gamma = self.optimal_par["gamma"]
         df_dx = np.dot(df.T, beta)
         d_dxi = x[:, kx].reshape((n_eval, 1)) - self.X_norma[:, kx].reshape((1, self.nt))
-        d_dxi_new = d_dx[:,kx]
-        print("dx: ", dx)
-        print("shape of dx: ", dx.shape)
-        print("d_dx: ", d_dx)
-        print("shape of d_dx: ", d_dx.shape)
-        print("dr_dx: ", dr_dx)
-        print("shape of dr_dx: ", dr_dx.shape)
-        print("shape of gamma: ", gamma.shape)
-        print("shape of d_dxi * r: ", (d_dxi * r).shape)
-        print("r: ", r)
-        print("shape of r: ", r.shape)
+        d_dxi_new = d_dx[:,kx].reshape(n_eval, self.nt)
+        # print("dx: ", dx)
+        # print("shape of dx: ", dx.shape)
+        # print("d_dx: ", d_dx)
+        # print("shape of d_dx: ", d_dx.shape)
+        # print("shape of d_dxi: ", d_dxi.shape)
+        # print("shape of d_dxi_new: ", d_dxi_new.shape)
+        # print("dr_dx: ", dr_dx)
+        # print("shape of dr_dx: ", dr_dx.shape)
+        # print("shape of gamma: ", gamma.shape)
+        # print("shape of d_dxi * r: ", (d_dxi * r).shape)
+        # print("r: ", r)
+        # print("shape of r: ", r.shape)
         if self.name != "Kriging" and "KPLSK" not in self.name:
             theta = np.sum(self.optimal_theta * self.coeff_pls**2, axis=1)
         else:
@@ -1131,8 +1133,8 @@ class KrgBased(SurrogateModel):
         #     * self.y_std
         #     / self.X_scale[kx]
         # )
-        print("original value: ", 2 * theta[kx] * np.dot(d_dxi * r, gamma))
-        print("new value; ", np.dot(d_dxi_new*r, gamma))
+        # print("original value: ", 2 * theta[kx] * np.dot(d_dxi * r, gamma))
+        # print("new value; ", np.dot(d_dxi_new*r, gamma))
         y = (
             (df_dx[kx] - np.dot(d_dxi_new*r, gamma))
             * self.y_std
