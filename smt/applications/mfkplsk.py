@@ -32,7 +32,7 @@ class MFKPLSK(MFKPLS):
         # Modif for KPLSK model
         if opt == 0:
             # Kriging step
-            d = componentwise_distance(dx, self.options["corr"], self.nx)
+            d = componentwise_distance(dx, self.options["corr"], self.nx, power=self.options["power"])
         else:
             # KPLS step
             d = super(MFKPLSK, self)._componentwise_distance(dx, opt)

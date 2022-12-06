@@ -22,11 +22,12 @@ class KRG(KrgBased):
             types=(str),
         )
 
-    def _componentwise_distance(self, dx, opt=0, theta=None, return_derivative=False):
+    def _componentwise_distance(self, dx, opt=0, power=2.0, theta=None, return_derivative=False):
         d = componentwise_distance(
             dx,
             self.options["corr"],
             self.nx,
+            power=self.options["power"],
             theta=theta,
             return_derivative=return_derivative,
         )

@@ -101,6 +101,12 @@ class KrgBased(SurrogateModel):
             desc="a jitter for numerical stability",
         )
         declare(
+            "power",
+            2.0,
+            types=(float),
+            desc="power for the exponential kernel function",
+        )
+        declare(
             "theta0", [1e-2], types=(list, np.ndarray), desc="Initial hyperparameters"
         )
         # In practice, in 1D and for X in [0,1], theta^{-2} in [1e-2,infty), i.e.
@@ -388,6 +394,7 @@ class KrgBased(SurrogateModel):
                 dx,
                 corr,
                 nx,
+                power=self.options["power"],
                 theta=None,
                 return_derivative=False,
             )
@@ -1011,6 +1018,7 @@ class KrgBased(SurrogateModel):
                 dx,
                 self.options["corr"],
                 self.nx,
+                self.options["power"],
                 theta=None,
                 return_derivative=False,
             )
@@ -1045,7 +1053,7 @@ class KrgBased(SurrogateModel):
             X_cont = (x - self.X_offset) / self.X_scale
             # Get pairwise componentwise L1-distances to the input training set
             dx = differences(X_cont, Y=self.X_norma.copy())
-            d = self._componentwise_distance(dx)
+            d = self._componentwise_distance(dx,power=self.options["power"])
             # Compute the correlation function
             r = self._correlation_types[self.options["corr"]](
                 self.optimal_theta, d
@@ -1081,8 +1089,8 @@ class KrgBased(SurrogateModel):
         x = (x - self.X_offset) / self.X_scale
         # Get pairwise componentwise L1-distances to the input training set
         dx = differences(x, Y=self.X_norma.copy())
-        d = self._componentwise_distance(dx)
-        d_dx = self._componentwise_distance(dx, theta=self.optimal_theta, return_derivative=True)
+        d = self._componentwise_distance(dx, power=self.options["power"])
+        d_dx = self._componentwise_distance(dx, power=self.options["power"],theta=self.optimal_theta, return_derivative=True)
         # Compute the correlation function
         r = self._correlation_types[self.options["corr"]](
             self.optimal_theta, d
@@ -1166,6 +1174,7 @@ class KrgBased(SurrogateModel):
                 dx,
                 self.options["corr"],
                 self.nx,
+                power=self.options["power"],
                 theta=None,
                 return_derivative=False,
             )
@@ -1202,7 +1211,7 @@ class KrgBased(SurrogateModel):
             x = (x - self.X_offset) / self.X_scale
             # Get pairwise componentwise L1-distances to the input training set
             dx = differences(x, Y=self.X_norma.copy())
-            d = self._componentwise_distance(dx)
+            d = self._componentwise_distance(dx, power=self.options["power"])
             # Compute the correlation function
             r = self._correlation_types[self.options["corr"]](
                 self.optimal_theta, d
@@ -1243,9 +1252,9 @@ class KrgBased(SurrogateModel):
         theta = self.optimal_theta
         # Get pairwise componentwise L1-distances to the input training set
         dx = differences(x, Y=self.X_norma.copy())
-        d = self._componentwise_distance(dx)
+        d = self._componentwise_distance(dx, power=self.options["power"])
         dd = self._componentwise_distance(
-            dx, theta=self.optimal_theta, return_derivative=True
+            dx, power=self.options["power"], theta=self.optimal_theta, return_derivative=True
         )
         sigma2 = self.optimal_par["sigma2"]
 

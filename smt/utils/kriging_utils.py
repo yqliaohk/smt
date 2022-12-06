@@ -1074,7 +1074,7 @@ def ge_compute_pls(X, y, n_comp, pts, delta_x, xlimits, extra_points):
     return np.abs(coeff_pls).mean(axis=0), XX, yy
 
 
-def componentwise_distance(D, corr, dim, theta=None, return_derivative=False):
+def componentwise_distance(D, corr, dim, power=2.0, theta=None, return_derivative=False):
 
     """
     Computes the nonzero componentwise cross-spatial-correlation-distance
@@ -1117,13 +1117,14 @@ def componentwise_distance(D, corr, dim, theta=None, return_derivative=False):
             if i * nb_limit > D_corr.shape[0]:
                 return D_corr
             else:
+                print("power: ", power)
                 if corr == "squar_exp":
                     # D_corr[i * nb_limit : (i + 1) * nb_limit, :] = (
                     #     D[i * nb_limit : (i + 1) * nb_limit, :] ** 2
                     # )
                     D_corr[i * nb_limit : (i + 1) * nb_limit, :] = np.abs(
                         D[i * nb_limit : (i + 1) * nb_limit, :]
-                    )**1.9
+                    )**power
                 elif corr == "act_exp":
                     D_corr[i * nb_limit : (i + 1) * nb_limit, :] = D[
                         i * nb_limit : (i + 1) * nb_limit, :
@@ -1144,11 +1145,11 @@ def componentwise_distance(D, corr, dim, theta=None, return_derivative=False):
 
             der = np.ones(D.shape)
             for i, j in np.ndindex(D.shape):
-                der[i][j] = np.abs(D[i][j])**0.9
+                der[i][j] = np.abs(D[i][j])**(power-1)
                 if D[i][j] < 0:
                     der[i][j] = der[i][j] * (-1)
 
-            D_corr = 1.9*np.einsum("j,ij->ij", theta.T, der)
+            D_corr = power*np.einsum("j,ij->ij", theta.T, der)
             return D_corr
         elif corr == "act_exp":
             raise ValueError("this option is not implemented for active learning")
