@@ -698,6 +698,7 @@ def matern52(theta, d, grad_ind=None, hess_ind=None, derivative_params=None):
             A[i][0] = np.exp(-np.sqrt(5) * abs_0[i])
 
         der = np.ones(dx.shape)
+        print("derivative_param dx shape: ", dx.shape)
         for i in range(len(der)):
             for j in range(n_components):
                 if dx[i][j] < 0:
@@ -713,7 +714,7 @@ def matern52(theta, d, grad_ind=None, hess_ind=None, derivative_params=None):
                             1
                             + np.sqrt(5) * abs_[j][l] * theta[l]
                             + (5.0 / 3) * sqr[j][l] * theta[l] ** 2
-                        )
+                        ) # because of the product, it is accumulative
                 dB[j][k] = (
                     np.sqrt(5) * theta[k] * der[j][k]
                     + 2 * (5.0 / 3) * der[j][k] * abs_[j][k] * theta[k] ** 2
@@ -1117,7 +1118,6 @@ def componentwise_distance(D, corr, dim, power=2.0, theta=None, return_derivativ
             if i * nb_limit > D_corr.shape[0]:
                 return D_corr
             else:
-                print("power: ", power)
                 if corr == "squar_exp":
                     # D_corr[i * nb_limit : (i + 1) * nb_limit, :] = (
                     #     D[i * nb_limit : (i + 1) * nb_limit, :] ** 2

@@ -647,7 +647,7 @@ class KrgBased(SurrogateModel):
             else:
                 # Ft is too ill conditioned, get out (try different theta)
                 return reduced_likelihood_function_value, par
-
+        print("condition number:", sv[0] / sv[-1])
         Yt = linalg.solve_triangular(C, self.y_norma, lower=True)
         beta = linalg.solve_triangular(G, np.dot(Q.T, Yt))
         rho = Yt - np.dot(Ft, beta)
@@ -1088,21 +1088,19 @@ class KrgBased(SurrogateModel):
 
         x = (x - self.X_offset) / self.X_scale
         # Get pairwise componentwise L1-distances to the input training set
-        dx = differences(x, Y=self.X_norma.copy())
-        d = self._componentwise_distance(dx, power=self.options["power"])
+        dx = differences(x, Y=self.X_norma.copy()) # xi-xj
+        d = self._componentwise_distance(dx, power=self.options["power"]) # abs(xi-xj)
         d_dx = self._componentwise_distance(dx, power=self.options["power"],theta=self.optimal_theta, return_derivative=True)
         # Compute the correlation function
         r = self._correlation_types[self.options["corr"]](
             self.optimal_theta, d
         ).reshape(n_eval, self.nt)
-        dr_dx = self._correlation_types[self.options["corr"]](
-            self.optimal_theta, d_dx, grad_ind=kx
-        ).reshape(n_eval, self.nt)
 
-        if self.options["corr"] != "squar_exp":
-            raise ValueError(
-                "The derivative is only available for squared exponential kernel"
-            )
+
+        # if self.options["corr"] != "squar_exp":
+        #     raise ValueError(
+        #         "The derivative is only available for squared exponential kernel"
+        #     )
         if self.options["poly"] == "constant":
             df = np.zeros((1, self.nx))
         elif self.options["poly"] == "linear":
@@ -1130,7 +1128,7 @@ class KrgBased(SurrogateModel):
         # print("shape of dr_dx: ", dr_dx.shape)
         # print("shape of gamma: ", gamma.shape)
         # print("shape of d_dxi * r: ", (d_dxi * r).shape)
-        # print("r: ", r)
+        # print("r1: ", r)
         # print("shape of r: ", r.shape)
         if self.name != "Kriging" and "KPLSK" not in self.name:
             theta = np.sum(self.optimal_theta * self.coeff_pls**2, axis=1)
@@ -1143,11 +1141,26 @@ class KrgBased(SurrogateModel):
         # )
         # print("original value: ", 2 * theta[kx] * np.dot(d_dxi * r, gamma))
         # print("new value; ", np.dot(d_dxi_new*r, gamma))
-        y = (
-            (df_dx[kx] - np.dot(d_dxi_new*r, gamma))
-            * self.y_std
-            / self.X_scale[kx]
+        if "matern" in self.options["corr"]:
+            derivative_dic = {"dx": dx}
+            r, dr_dx = self._correlation_types[self.options["corr"]](
+            self.optimal_theta, d, derivative_params=derivative_dic
         )
+            # print("dr_dx=", dr_dx)
+            # print("r2: ", r)
+            # print("shape of dr_dx: ", dr_dx.shape)
+            # print("shape of gamma: ", gamma.shape)
+            y = (
+                (df_dx[kx] - np.dot(dr_dx[:,kx].reshape(n_eval, self.nt), gamma))
+                * self.y_std
+                / self.X_scale[kx]
+            )
+        else:
+            y = (
+                (df_dx[kx] - np.dot(d_dxi_new*r, gamma))
+                * self.y_std
+                / self.X_scale[kx]
+            )
         return y
 
     def _predict_variances(self, x):
